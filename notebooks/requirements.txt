@@ -1,0 +1,7 @@
+langchain
+pypdf
+tiktoken
+langdetect
+azure.core
+azure.ai.documentintelligence
+python-dotenv

@@ -396,3 +396,9 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+sample-docs/*
+
+__azurite_*.json
+__blobstorage__/
+__queuestorage__/
