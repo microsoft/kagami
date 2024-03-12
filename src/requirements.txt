@@ -2,8 +2,11 @@
 # The Python Worker is managed by Azure Functions platform
 # Manually managing azure-functions-worker may cause unexpected issues
 
-azure-functions
-langchain
-azure.core
 azure.ai.documentintelligence
+azure-ai-textanalytics
+azure.core
+azure-functions
+azure-functions-durable
+langchain
 python-dotenv
+semantic_kernel

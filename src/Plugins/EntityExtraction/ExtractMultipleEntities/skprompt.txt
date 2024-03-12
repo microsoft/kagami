@@ -1,0 +1,32 @@
+Extract the following entities from the text between <|Start_Text|> and <|End_Text|>.  
+- `Duration`: this is the length of the study performed  
+- `Species`: this is the species of the test subjects  
+- `DrugOrCompound`: this is the drug or compound used in the study  
+- `RouteOfAdministration`: this is the manner or route which the drug or compound was administered  
+- `InternalStudyNumber`: this is the internal study number, generally follows format "TKD-BCS-00000" where 00000 is a 5 digit number  
+- `ExternalStudyNumber`: this is the external study number  
+- `TestFacility`: this is the name of the test facility  
+   
+Important:    
+- Every entity type must be included in the response  
+- If no value for an entity is found show its value as an empty string  
+- Attempt zero-shot recognition for `Duration` and `Study Type` and `Species` and `Drug or Compound` and `Route of Administration` and `InternalStudyNumber` and `ExternalStudyNumber` and `TestFacility`  
+- Return the result as a JavaScript array of parsable JSON objects for each extracted entity.  
+- Use a javascript array in the JSON output if multiple values were extracted for an entity.  
+
+<|Start_Text|>  
+{{$sourceText}}
+<|End_Text|>
+
+You should only respond in JSON format as described below, filling in the entities you've extracted from the text in their corresponding property. If an entity is not found, use an empty string as its value.  
+
+Response Format:    
+{  
+    "Duration": Duration,  
+    "Species": ["Species1","Species2"],  
+    "DrugOrCompound": DrugOrCompound,  
+    "RouteOfAdministration": RouteOfAdministration,  
+    "InternalStudyNumber": InternalStudyNumber,  
+    "ExternalStudyNumber": ExternalStudyNumber,  
+    "TestFacility": TestFacility  
+}  
