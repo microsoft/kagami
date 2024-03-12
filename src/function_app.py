@@ -1,28 +1,35 @@
+from azure.ai.textanalytics import TextAnalyticsClient
+from azure.core.credentials import AzureKeyCredential
+
+# import azure.durable_functions as df
 import azure.functions as func
+from langchain_community.document_loaders import AzureAIDocumentIntelligenceLoader
+from langchain.text_splitter import MarkdownHeaderTextSplitter
 import logging
 import os
-from langchain.text_splitter import MarkdownHeaderTextSplitter
-from langchain_community.document_loaders import AzureAIDocumentIntelligenceLoader
+import json
+import semantic_kernel as sk
+from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 
 app = func.FunctionApp()
+
 
 @app.blob_trigger(
     arg_name="myblob",
     path="incoming/{name}",
-    connection="IncomingBlobStorageConnection",
+    connection="INCOMING_BLOB_STORAGE_CONNECTION",
 )
-def blob_trigger(myblob: func.InputStream):
+async def blob_trigger(myblob: func.InputStream) -> None:
     logging.info(
         f"Python blob trigger function processed blob"
         f"Name: {myblob.name}"
         f"Blob Size: {myblob.length} bytes"
     )
 
-    endpoint = os.getenv("DOCUMENTINTELLIGENCE_ENDPOINT")
-    key = os.getenv("DOCUMENTINTELLIGENCE_API_KEY")
-
-    print("Using endpoint: ", endpoint)
-    print("Using key with length: ", len(key) * "*")
+    endpoint = os.getenv("AI_MULTISERVICE_ENDPOINT")
+    key = os.getenv("AI_MULTISERVICE_KEY")
+    script_directory = os.path.dirname(__file__)
+    plugins_directory = os.path.join(script_directory, "plugins")
 
     ai_doc_intel_loader = AzureAIDocumentIntelligenceLoader(
         url_path=myblob.uri,
@@ -37,16 +44,64 @@ def blob_trigger(myblob: func.InputStream):
         ("#", "Header 1"),
         ("##", "Header 2"),
         ("###", "Header 3"),
+        ("####", "Header 4"),
     ]
+
     text_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
     docs_string = docs[0].page_content
     splits = text_splitter.split_text(docs_string)
 
+    chunks = []
+    for split in splits:
+        chunks.append(split.page_content)
 
-@app.function_name(name="HttpTrigger1")
-@app.route(route="hello", auth_level=func.AuthLevel.ANONYMOUS)
-def test_function(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info("Python HTTP trigger function processed a request.")
-    return func.HttpResponse(
-        "This HTTP triggered function executed successfully.", status_code=200
+    # setup semantic kernel
+    aoai_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+    aoai_key = os.getenv("AZURE_OPENAI_API_KEY")
+    aoai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    kernel = sk.Kernel()
+    service_id = "default"
+    service = AzureChatCompletion(
+        service_id=service_id,
+        deployment_name=aoai_deployment,
+        endpoint=aoai_endpoint,
+        api_key=aoai_key,
     )
+    kernel.add_service(service)
+
+    plugin_names = [
+        plugin
+        for plugin in os.listdir(plugins_directory)
+        if os.path.isdir(os.path.join(plugins_directory, plugin))
+    ]
+
+    # for each plugin, add the plugin to the kernel
+    try:
+        for plugin_name in plugin_names:
+            kernel.import_plugin_from_prompt_directory(plugins_directory, plugin_name)
+    except ValueError as e:
+        logging.exception(f"Plugin {plugin_name} not found")
+
+    # entity extraction
+    final_extracted_entities = {}
+    for i, chunk in enumerate(chunks):
+        if (
+            i > 0
+        ):  # skipping other chunks for now to get this code into main for collaboration, see next todo
+            continue
+        extract_entities_result = await kernel.invoke(
+            kernel.plugins["EntityExtraction"]["ExtractMultipleEntities"],
+            sk.KernelArguments(input=chunk),
+        )
+
+        print(extract_entities_result.value[0].content)
+
+        # todo: test that output is well-formatted json
+        extracted_entities = json.load(extract_entities_result.value[0].content)
+
+        # todo: compare results from all chunks to find agreed upon entities.. start with just the first chunk
+        final_extracted_entities = extracted_entities
+
+    print(final_extracted_entities)
+
+    # todo: send final results to dataverse

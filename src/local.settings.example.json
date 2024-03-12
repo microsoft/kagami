@@ -5,7 +5,10 @@
     "FUNCTIONS_WORKER_RUNTIME": "python",
     "AzureWebJobsFeatureFlags": "EnableWorkerIndexing",
     "IncomingBlobStorageConnection": "UseDevelopmentStorage=true",
-    "DOCUMENTINTELLIGENCE_ENDPOINT": "",
-    "DOCUMENTINTELLIGENCE_API_KEY": ""
+    "AI_MULTISERVICE_ENDPOINT": "",
+    "AI_MULTISERVICE_KEY": "",
+    "AZURE_OPENAI_DEPLOYMENT_NAME": "",
+    "AZURE_OPENAI_ENDPOINT": "",
+    "AZURE_OPENAI_API_KEY": ""
   }
 }
