@@ -1,0 +1,7 @@
+The text found within <|Start_Text|> and <|End_Text|> is an exerpt from a medical study. 
+Please determine based on this excerpt if the findings were considered both conclusive and significant. 
+Return your findings as a single true or false response.
+
+<|Start_Text|>  
+{{$sourceText}}
+<|End_Text|>

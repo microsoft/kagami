@@ -1,0 +1,22 @@
+{
+    "schema": 1,
+    "description": "Provide a true/false evaluation if the provided excerpt from a medical study indicates both a conclusive and significant finding.",
+    "execution_settings": {
+        "default": {
+            "max_tokens": 60,
+            "temperature": 0.5,
+            "top_p": 0,
+            "presence_penalty": 0,
+            "frequency_penalty": 0
+        }
+    },
+    "input": {
+        "parameters": [
+            {
+                "name": "sourceText",
+                "description": "The excerpt from the medical text to evaluate",
+                "defaultValue": ""
+            }
+        ]
+    }
+}

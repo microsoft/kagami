@@ -8,5 +8,6 @@ azure.core
 azure-functions
 azure-functions-durable
 langchain
+langdetect
 python-dotenv
 semantic_kernel
