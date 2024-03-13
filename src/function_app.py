@@ -11,6 +11,8 @@ import os
 import json
 import semantic_kernel as sk
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
+from azure.storage.blob import BlobServiceClient
+import datetime
 
 app = func.FunctionApp()
 
@@ -251,7 +253,10 @@ async def blob_trigger(myblob: func.InputStream) -> None:
     deep_full_document_analysis_result[
         "conclusion_shows_conclusive_significant_findings"
     ] = conclusion_shows_conclusive_significant_findings
-    deep_full_document_analysis_result["detected_language_result"] = first_chunk_lang
+    lang_json = []
+    for lang in first_chunk_lang:
+        lang_json.append(convert_language_to_json(lang))
+    deep_full_document_analysis_result["detected_language_result"] = lang_json
     deep_full_document_analysis_result["extracted_entities"] = extracted_entities
     deep_full_document_analysis_result["extracted_stakeholders"] = (
         extracted_stakeholders
@@ -267,7 +272,7 @@ async def blob_trigger(myblob: func.InputStream) -> None:
     )
 
     print(flat_full_document_analysis_result_json)
-
+    upload_to_blob(flat_full_document_analysis_result_json)
 
 # todo: needs work to actually flatten instead of make strings
 def flatten_json(y):
@@ -336,3 +341,23 @@ def calculate_average_response(list_of_json_objects):
             average_response[key] = max(responses, key=responses.get)
         responses = {}
     return average_response
+
+def convert_language_to_json(language):
+    return {"language": language.lang, "probability": language.prob}
+
+def upload_to_blob(extracted_entities):
+    try:
+        # Create a blob client using the local file name as the name for the blob
+
+        conn_str = os.getenv("INCOMING_BLOB_STORAGE_CONNECTION")
+        blob_service_client = BlobServiceClient.from_connection_string(conn_str)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        blob_client = blob_service_client.get_blob_client("outputs", f"extracted_content_{timestamp}.json")
+
+        print("\nUploading to Azure Storage as blob:\n\t" + "extracted_content.json")
+
+        # Upload the created file
+        blob_client.upload_blob(extracted_entities, overwrite=True)
+    except Exception as ex:
+        print('Exception:')
+        print(ex)
