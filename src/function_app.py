@@ -151,6 +151,7 @@ async def blob_trigger(myblob: func.InputStream) -> None:
     for i, chunk in enumerate(chunks):
         print(f"Processing chunk {i}")
         # multi entity extraction
+
         extract_entities_result = await kernel.invoke(
             kernel.plugins["EntityExtraction"]["ExtractMultipleEntities"],
             sk.KernelArguments(input=chunk),
@@ -212,6 +213,7 @@ async def blob_trigger(myblob: func.InputStream) -> None:
         print(extracted_entities)
 
     # aggregate all results into single dictionary
+
     full_document_analysis_result = {}
     full_document_analysis_result["intro_study_type_classification"] = (
         intro_study_type_classification
