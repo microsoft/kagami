@@ -146,8 +146,11 @@ async def blob_trigger(myblob: func.InputStream) -> None:
 
     # entity extraction
     extracted_entity_responses = []
+    extracted_stakeholders_responses = []
+    extracted_dates_responses = []
     for i, chunk in enumerate(chunks):
         print(f"Processing chunk {i}")
+        # multi entity extraction
         extract_entities_result = await kernel.invoke(
             kernel.plugins["EntityExtraction"]["ExtractMultipleEntities"],
             sk.KernelArguments(input=chunk),
@@ -162,21 +165,45 @@ async def blob_trigger(myblob: func.InputStream) -> None:
                 f"Extracted entities result for chunk {i} is poorly formatted json: ",
                 extract_entities_result.value[0].content,
             )
+        # stakeholders extraction
+        extract_stakeholders_result = await kernel.invoke(
+            kernel.plugins["EntityExtraction"]["ExtractStakeholders"],
+            sk.KernelArguments(input=chunk),
+        )
+        success, extracted_stakeholders = validate_and_format_json(
+            extract_stakeholders_result.value[0].content, None
+        )
+        if success is True:
+            extracted_stakeholders_responses.append(extracted_stakeholders)
+        else:
+            print(
+                f"Extracted entities result for chunk {i} is poorly formatted json: ",
+                extract_stakeholders_result.value[0].content,
+            )
+        # dates extraction
+        extract_dates_result = await kernel.invoke(
+            kernel.plugins["EntityExtraction"]["ExtractSignificantDates"],
+            sk.KernelArguments(input=chunk),
+        )
+        success, extracted_dates = validate_and_format_json(
+            extract_dates_result.value[0].content, None
+        )
+        if success is True:
+            extracted_dates_responses.append(extracted_dates)
+        else:
+            print(
+                f"Extracted entities result for chunk {i} is poorly formatted json: ",
+                extract_dates_result.value[0].content,
+            )
+
+    # average entity extraction results across chunks
     avg_extracted_entities_response = calculate_average_response(
         extracted_entity_responses
     )
-
-    extract_stakeholders_result = await kernel.invoke(
-        kernel.plugins["EntityExtraction"]["ExtractStakeholders"],
-        sk.KernelArguments(input=chunk),
+    avg_extracted_stakeholders_response = calculate_average_response(
+        extracted_stakeholders_responses
     )
-    print(extract_stakeholders_result.value[0].content)
-
-    extract_dates_result = await kernel.invoke(
-        kernel.plugins["EntityExtraction"]["ExtractSignificantDates"],
-        sk.KernelArguments(input=chunk),
-    )
-    print(extract_dates_result.value[0].content)
+    avg_extracted_dates_response = calculate_average_response(extracted_dates_responses)
 
     success, extracted_entities = validate_and_format_json(
         extract_entities_result.value[0].content, None
@@ -184,6 +211,7 @@ async def blob_trigger(myblob: func.InputStream) -> None:
     if success:
         print(extracted_entities)
 
+    # aggregate all results into single dictionary
     full_document_analysis_result = {}
     full_document_analysis_result["intro_study_type_classification"] = (
         intro_study_type_classification
@@ -201,8 +229,13 @@ async def blob_trigger(myblob: func.InputStream) -> None:
     full_document_analysis_result["extracted_entities"] = (
         avg_extracted_entities_response
     )
+    full_document_analysis_result["extracted_stakeholders"] = (
+        avg_extracted_stakeholders_response
+    )
+    full_document_analysis_result["extracted_dates"] = avg_extracted_dates_response
 
-    print(full_document_analysis_result)
+    full_document_analysis_result_json = json.loads(full_document_analysis_result)
+    print(json.dumps(full_document_analysis_result_json, indent=4))
     # todo: send final results to dataverse
 
 
@@ -229,6 +262,9 @@ def parse_text_to_boolean(text):
 # for simplicity assumes all objects use the same schema
 # probably a more performant way to do this
 def calculate_average_response(list_of_json_objects):
+    if len(list_of_json_objects) == 0:
+        return None
+
     first_entry = json.loads(list_of_json_objects[0])
 
     property_keys = first_entry.keys()
