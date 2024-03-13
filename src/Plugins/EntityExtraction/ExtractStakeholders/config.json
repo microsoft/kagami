@@ -13,7 +13,7 @@
     "input": {
         "parameters": [
             {
-                "name": "sourceText",
+                "name": "input",
                 "description": "A chunk of the source document to try to extract stakeholders from.",
                 "defaultValue": ""
             }

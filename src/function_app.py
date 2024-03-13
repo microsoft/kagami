@@ -146,73 +146,73 @@ async def blob_trigger(myblob: func.InputStream) -> None:
     first_chunk_lang = detect_langs(intro_chunk)
     print(first_chunk_lang)
 
-    # # entity extraction
-    # extracted_entity_responses = []
-    # extracted_stakeholders_responses = []
-    # extracted_dates_responses = []
-    # for i, chunk in enumerate(chunks):
-    #     print(f"Processing chunk {i}")
-    #     # multi entity extraction
+    # entity extraction
+    extracted_entity_responses = []
+    extracted_stakeholders_responses = []
+    extracted_dates_responses = []
+    for i, chunk in enumerate(chunks):
+        print(f"Processing chunk {i}")
+        # multi entity extraction
 
-    #     extract_entities_result = await kernel.invoke(
-    #         kernel.plugins["EntityExtraction"]["ExtractMultipleEntities"],
-    #         sk.KernelArguments(input=chunk),
-    #     )
-    #     success, extracted_entities = validate_and_format_json(
-    #         extract_entities_result.value[0].content, None
-    #     )
-    #     if success is True:
-    #         extracted_entity_responses.append(extracted_entities)
-    #     else:
-    #         print(
-    #             f"Extracted entities result for chunk {i} is poorly formatted json: ",
-    #             extract_entities_result.value[0].content,
-    #         )
-    #     # stakeholders extraction
-    #     extract_stakeholders_result = await kernel.invoke(
-    #         kernel.plugins["EntityExtraction"]["ExtractStakeholders"],
-    #         sk.KernelArguments(input=chunk),
-    #     )
-    #     success, extracted_stakeholders = validate_and_format_json(
-    #         extract_stakeholders_result.value[0].content, None
-    #     )
-    #     if success is True:
-    #         extracted_stakeholders_responses.append(extracted_stakeholders)
-    #     else:
-    #         print(
-    #             f"Extracted entities result for chunk {i} is poorly formatted json: ",
-    #             extract_stakeholders_result.value[0].content,
-    #         )
-    #     # dates extraction
-    #     extract_dates_result = await kernel.invoke(
-    #         kernel.plugins["EntityExtraction"]["ExtractSignificantDates"],
-    #         sk.KernelArguments(input=chunk),
-    #     )
-    #     success, extracted_dates = validate_and_format_json(
-    #         extract_dates_result.value[0].content, None
-    #     )
-    #     if success is True:
-    #         extracted_dates_responses.append(extracted_dates)
-    #     else:
-    #         print(
-    #             f"Extracted entities result for chunk {i} is poorly formatted json: ",
-    #             extract_dates_result.value[0].content,
-    #         )
+        extract_entities_result = await kernel.invoke(
+            kernel.plugins["EntityExtraction"]["ExtractMultipleEntities"],
+            sk.KernelArguments(input=chunk),
+        )
+        success, extracted_entities = validate_and_format_json(
+            extract_entities_result.value[0].content, None
+        )
+        if success is True:
+            extracted_entity_responses.append(extracted_entities)
+        else:
+            print(
+                f"Extracted entities result for chunk {i} is poorly formatted json: ",
+                extract_entities_result.value[0].content,
+            )
+        # stakeholders extraction
+        extract_stakeholders_result = await kernel.invoke(
+            kernel.plugins["EntityExtraction"]["ExtractStakeholders"],
+            sk.KernelArguments(input=chunk),
+        )
+        success, extracted_stakeholders = validate_and_format_json(
+            extract_stakeholders_result.value[0].content, None
+        )
+        if success is True:
+            extracted_stakeholders_responses.append(extracted_stakeholders)
+        else:
+            print(
+                f"Extracted entities result for chunk {i} is poorly formatted json: ",
+                extract_stakeholders_result.value[0].content,
+            )
+        # dates extraction
+        extract_dates_result = await kernel.invoke(
+            kernel.plugins["EntityExtraction"]["ExtractSignificantDates"],
+            sk.KernelArguments(input=chunk),
+        )
+        success, extracted_dates = validate_and_format_json(
+            extract_dates_result.value[0].content, None
+        )
+        if success is True:
+            extracted_dates_responses.append(extracted_dates)
+        else:
+            print(
+                f"Extracted entities result for chunk {i} is poorly formatted json: ",
+                extract_dates_result.value[0].content,
+            )
 
-    # # average entity extraction results across chunks
-    # avg_extracted_entities_response = calculate_average_response(
-    #     extracted_entity_responses
-    # )
-    # avg_extracted_stakeholders_response = calculate_average_response(
-    #     extracted_stakeholders_responses
-    # )
-    # avg_extracted_dates_response = calculate_average_response(extracted_dates_responses)
+    # average entity extraction results across chunks
+    avg_extracted_entities_response = calculate_average_response(
+        extracted_entity_responses
+    )
+    avg_extracted_stakeholders_response = calculate_average_response(
+        extracted_stakeholders_responses
+    )
+    avg_extracted_dates_response = calculate_average_response(extracted_dates_responses)
 
-    # success, extracted_entities = validate_and_format_json(
-    #     extract_entities_result.value[0].content, None
-    # )
-    # if success:
-    #     print(extracted_entities)
+    success, extracted_entities = validate_and_format_json(
+        extract_entities_result.value[0].content, None
+    )
+    if success:
+        print(extracted_entities)
 
     # bug in avg_extracted_entities_response, so using the first chunk for now to demo
     arbitrary_chunk = chunks[0]

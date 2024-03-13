@@ -1,7 +1,7 @@
 I have some text below that I want you to attempt to classify as one of a list of StudyType and StudySubType values that I will provide.
 
 # Text to classify
-{{$sourceText}}
+{{$input}}
 
 # List of StudyType and StudySubType values
 [
