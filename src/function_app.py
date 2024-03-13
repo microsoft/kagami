@@ -90,82 +90,119 @@ async def blob_trigger(myblob: func.InputStream) -> None:
 
     # study type classification
     intro_classify_study_type_result = await kernel.invoke(
-            kernel.plugins["ClassificationPlugin"]["ClassifyStudyType"],
-            sk.KernelArguments(input=intro_chunk),
+        kernel.plugins["ClassificationPlugin"]["ClassifyStudyType"],
+        sk.KernelArguments(input=intro_chunk),
+    )
+    success, intro_study_type_classification = validate_and_format_json(
+        intro_classify_study_type_result.value[0].content, None
+    )
+    if success is False:
+        print(
+            "Intro study type classification result is poorly formatted json: ",
+            intro_classify_study_type_result.value[0].content,
         )
-    success, intro_study_type_classification = validate_and_format_json(intro_classify_study_type_result.value[0].content, None)
-    if success:
-        print(intro_study_type_classification)
-    else:
-        print("Intro study type classification result is poorly formatted json: ", intro_classify_study_type_result.value[0].content)
     conclusion_classify_study_type_result = await kernel.invoke(
-            kernel.plugins["ClassificationPlugin"]["ClassifyStudyType"],
-            sk.KernelArguments(input=conclusion_chunk),
+        kernel.plugins["ClassificationPlugin"]["ClassifyStudyType"],
+        sk.KernelArguments(input=conclusion_chunk),
+    )
+    success, conclusion_study_type_classification = validate_and_format_json(
+        conclusion_classify_study_type_result.value[0].content, None
+    )
+    if success is False:
+        print(
+            "Conclusion study type classification result is poorly formatted json: ",
+            conclusion_classify_study_type_result.value[0].content,
         )
-    success, conclusion_study_type_classification = validate_and_format_json(conclusion_classify_study_type_result.value[0].content, None)
-    if success:
-        print(conclusion_study_type_classification)
-    else:
-        print("Conclusion study type classification result is poorly formatted json: ", conclusion_classify_study_type_result.value[0].content)
 
     # intro & conclusion sentiment analysis
     intro_sentiment_analysis_result = await kernel.invoke(
-            kernel.plugins["SummaryPlugin"]["AreStudyFindingsSignificant"],
-            sk.KernelArguments(input=intro_chunk),
+        kernel.plugins["SummaryPlugin"]["AreStudyFindingsSignificant"],
+        sk.KernelArguments(input=intro_chunk),
+    )
+    intro_shows_conclusive_significant_findings = parse_text_to_boolean(
+        intro_sentiment_analysis_result.value[0].content
+    )
+    if intro_shows_conclusive_significant_findings is None:
+        print(
+            "Intro sentiment analysis is invalid boolean representation",
+            intro_sentiment_analysis_result.value[0].content,
         )
-    intro_shows_conclusive_significant_findings = parse_text_to_boolean(intro_sentiment_analysis_result.value[0].content)
-    if intro_shows_conclusive_significant_findings is not None:
-        print("Intro indicates conclusive + significant findings: ", intro_shows_conclusive_significant_findings)
-    else:
-        print("Intro sentiment analysis is invalid boolean representation", intro_sentiment_analysis_result.value[0].content)
     conclusion_sentiment_analysis_result = await kernel.invoke(
-            kernel.plugins["SummaryPlugin"]["AreStudyFindingsSignificant"],
-            sk.KernelArguments(input=conclusion_chunk),
+        kernel.plugins["SummaryPlugin"]["AreStudyFindingsSignificant"],
+        sk.KernelArguments(input=conclusion_chunk),
+    )
+    conclusion_shows_conclusive_significant_findings = parse_text_to_boolean(
+        intro_sentiment_analysis_result.value[0].content
+    )
+    if intro_shows_conclusive_significant_findings is None:
+        print(
+            "Intro sentiment analysis is invalid boolean representation",
+            conclusion_sentiment_analysis_result.value[0].content,
         )
-    conclusion_shows_conclusive_significant_findings = parse_text_to_boolean(intro_sentiment_analysis_result.value[0].content)
-    if intro_shows_conclusive_significant_findings is not None:
-        print("Intro indicates conclusive + significant findings: ", conclusion_shows_conclusive_significant_findings)
-    else:
-        print("Intro sentiment analysis is invalid boolean representation", conclusion_sentiment_analysis_result.value[0].content)
 
     # language detection
     first_chunk_lang = detect_langs(intro_chunk)
     print(first_chunk_lang)
 
     # entity extraction
+    extracted_entity_responses = []
     for i, chunk in enumerate(chunks):
         print(f"Processing chunk {i}")
         extract_entities_result = await kernel.invoke(
             kernel.plugins["EntityExtraction"]["ExtractMultipleEntities"],
             sk.KernelArguments(input=chunk),
         )
-
-        print(extract_entities_result.value[0].content)
-        # todo: test that output is well-formatted json
-        # extracted_entities = json.load(extract_entities_result.value[0].content)
-        # todo: contstruct final result comparing all chunks results
-        extract_stakeholders_result = await kernel.invoke(
-            kernel.plugins["EntityExtraction"]["ExtractStakeholders"],
-            sk.KernelArguments(input=chunk),
+        success, extracted_entities = validate_and_format_json(
+            extract_entities_result.value[0].content, None
         )
-        print(extract_stakeholders_result.value[0].content)
-      
-        extract_dates_result = await kernel.invoke(
-            kernel.plugins["EntityExtraction"]["ExtractSignificantDates"],
-            sk.KernelArguments(input=chunk),
-        )
-        print(extract_dates_result.value[0].content)
-
-        success, extracted_entities = validate_and_format_json(extract_entities_result.value[0].content, None)
-        if success:
-            print(extracted_entities)
+        if success is True:
+            extracted_entity_responses.append(extracted_entities)
         else:
-            print("Extracted entities result is poorly formatted json: ", extract_entities_result.value[0].content)
-        # todo: test that output is well-formatted json
-        # extracted_entities = json.load(extract_entities_result.value[0].content)
-        # todo: contstruct final resultm comparing all chunks results
-        
-    print("completed")
+            print(
+                f"Extracted entities result for chunk {i} is poorly formatted json: ",
+                extract_entities_result.value[0].content,
+            )
+    avg_extracted_entities_response = calculate_average_response(
+        extracted_entity_responses
+    )
+
+    extract_stakeholders_result = await kernel.invoke(
+        kernel.plugins["EntityExtraction"]["ExtractStakeholders"],
+        sk.KernelArguments(input=chunk),
+    )
+    print(extract_stakeholders_result.value[0].content)
+
+    extract_dates_result = await kernel.invoke(
+        kernel.plugins["EntityExtraction"]["ExtractSignificantDates"],
+        sk.KernelArguments(input=chunk),
+    )
+    print(extract_dates_result.value[0].content)
+
+    success, extracted_entities = validate_and_format_json(
+        extract_entities_result.value[0].content, None
+    )
+    if success:
+        print(extracted_entities)
+
+    full_document_analysis_result = {}
+    full_document_analysis_result["intro_study_type_classification"] = (
+        intro_study_type_classification
+    )
+    full_document_analysis_result["conclusion_study_type_classification"] = (
+        conclusion_study_type_classification
+    )
+    full_document_analysis_result["intro_shows_conclusive_significant_findings"] = (
+        intro_shows_conclusive_significant_findings
+    )
+    full_document_analysis_result[
+        "conclusion_shows_conclusive_significant_findings"
+    ] = conclusion_shows_conclusive_significant_findings
+    full_document_analysis_result["detected_language_result"] = first_chunk_lang
+    full_document_analysis_result["extracted_entities"] = (
+        avg_extracted_entities_response
+    )
+
+    print(full_document_analysis_result)
     # todo: send final results to dataverse
 
 
@@ -178,7 +215,8 @@ def validate_and_format_json(json_string, indent=4):
     except json.JSONDecodeError:
         # If parsing fails, return an error message
         return False, None
-    
+
+
 def parse_text_to_boolean(text):
     if text.lower() == "true":
         return True
@@ -186,3 +224,29 @@ def parse_text_to_boolean(text):
         return False
     else:
         return None
+
+
+# for simplicity assumes all objects use the same schema
+# probably a more performant way to do this
+def calculate_average_response(list_of_json_objects):
+    first_entry = json.loads(list_of_json_objects[0])
+
+    property_keys = first_entry.keys()
+
+    average_response = {}
+    responses = {}
+    for key in property_keys:
+        for obj in list_of_json_objects:
+            json_obj = json.loads(obj)
+            value = json_obj[key]
+            # todo: determine how to handle list values, for now skipping to prepare for demo
+            if isinstance(value, list):
+                continue
+            if json_obj[key] in responses:
+                responses[value] += 1
+            else:
+                responses[value] = 1
+        if len(responses) > 0:
+            average_response[key] = max(responses, key=responses.get)
+        responses = {}
+    return average_response
