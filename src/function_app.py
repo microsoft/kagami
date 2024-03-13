@@ -82,7 +82,7 @@ async def blob_trigger(myblob: func.InputStream) -> None:
     except ValueError as e:
         logging.exception(f"Plugin {plugin_name} not found")
 
-     # entity extraction
+    # entity extraction
     for i, chunk in enumerate(chunks):
         print(f"Processing chunk {i}")
         extract_entities_result = await kernel.invoke(
@@ -92,13 +92,18 @@ async def blob_trigger(myblob: func.InputStream) -> None:
         print(extract_entities_result.value[0].content)
         # todo: test that output is well-formatted json
         # extracted_entities = json.load(extract_entities_result.value[0].content)
-        # todo: contstruct final resultm comparing all chunks results
-        # todo: contstruct final resultm comparing all chunks results
+        # todo: contstruct final result comparing all chunks results
         extract_stakeholders_result = await kernel.invoke(
             kernel.plugins["EntityExtraction"]["ExtractStakeholders"],
             sk.KernelArguments(input=chunk),
         )
         print(extract_stakeholders_result.value[0].content)
-
+      
+        extract_dates_result = await kernel.invoke(
+            kernel.plugins["EntityExtraction"]["ExtractSignificantDates"],
+            sk.KernelArguments(input=chunk),
+        )
+        print(extract_dates_result.value[0].content)
+        
     print("completed")
     # todo: send final results to dataverse

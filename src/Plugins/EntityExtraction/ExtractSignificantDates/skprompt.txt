@@ -1,0 +1,9 @@
+Extract all important dates from the text extracted from a Study Protocol below, which is found between <|Start_Text|> and <|End_Text|>.
+ 
+Important:  
+- Return the result as a JavaScript array of parsable JSON objects for each extracted entity.
+- Use a javascript array in the JSON output if multiple values were extracted for an entity.
+
+<|Start_Text|>
+{{$sourceText}}
+<|End_Text|>
