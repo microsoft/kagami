@@ -5,5 +5,5 @@ Important:
 - Use a javascript array in the JSON output if multiple values were extracted for an entity.
 
 <|Start_Text|>
-{{$sourceText}}
+{{$input}}
 <|End_Text|>

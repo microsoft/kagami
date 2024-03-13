@@ -15,7 +15,7 @@ Important:
 - Use a javascript array in the JSON output if multiple values were extracted for an entity.  
 
 <|Start_Text|>  
-{{$sourceText}}
+{{$input}}
 <|End_Text|>
 
 You should only respond in JSON format as described below, filling in the entities you've extracted from the text in their corresponding property. If an entity is not found, use an empty string as its value.  

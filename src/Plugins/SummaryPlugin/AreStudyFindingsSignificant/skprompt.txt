@@ -3,5 +3,5 @@ Please determine based on this excerpt if the findings were considered both conc
 Return your findings as a single true or false response.
 
 <|Start_Text|>  
-{{$sourceText}}
+{{$input}}
 <|End_Text|>

@@ -402,3 +402,4 @@ sample-docs/*
 __azurite_*.json
 __blobstorage__/
 __queuestorage__/
+notebooks/.env
