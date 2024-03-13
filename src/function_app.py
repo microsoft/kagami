@@ -5,6 +5,7 @@ from azure.core.credentials import AzureKeyCredential
 import azure.functions as func
 from langchain_community.document_loaders import AzureAIDocumentIntelligenceLoader
 from langchain.text_splitter import MarkdownHeaderTextSplitter
+from langdetect import detect_langs
 import logging
 import os
 import json
@@ -82,26 +83,89 @@ async def blob_trigger(myblob: func.InputStream) -> None:
     except ValueError as e:
         logging.exception(f"Plugin {plugin_name} not found")
 
+    # todo: identify intro and conclusion sections for sentiment analysis, language detection, and and classification
+    # for now, just use the first and last chunks
+    intro_chunk = chunks[0]
+    conclusion_chunk = chunks[-1]
+
+    # study type classification
+    intro_classify_study_type_result = await kernel.invoke(
+            kernel.plugins["ClassificationPlugin"]["ClassifyStudyType"],
+            sk.KernelArguments(input=intro_chunk),
+        )
+    success, intro_study_type_classification = validate_and_format_json(intro_classify_study_type_result.value[0].content, None)
+    if success:
+        print(intro_study_type_classification)
+    else:
+        print("Intro study type classification result is poorly formatted json: ", intro_classify_study_type_result.value[0].content)
+    conclusion_classify_study_type_result = await kernel.invoke(
+            kernel.plugins["ClassificationPlugin"]["ClassifyStudyType"],
+            sk.KernelArguments(input=conclusion_chunk),
+        )
+    success, conclusion_study_type_classification = validate_and_format_json(conclusion_classify_study_type_result.value[0].content, None)
+    if success:
+        print(conclusion_study_type_classification)
+    else:
+        print("Conclusion study type classification result is poorly formatted json: ", conclusion_classify_study_type_result.value[0].content)
+
+    # intro & conclusion sentiment analysis
+    intro_sentiment_analysis_result = await kernel.invoke(
+            kernel.plugins["SummaryPlugin"]["AreStudyFindingsSignificant"],
+            sk.KernelArguments(input=intro_chunk),
+        )
+    intro_shows_conclusive_significant_findings = parse_text_to_boolean(intro_sentiment_analysis_result.value[0].content)
+    if intro_shows_conclusive_significant_findings is not None:
+        print("Intro indicates conclusive + significant findings: ", intro_shows_conclusive_significant_findings)
+    else:
+        print("Intro sentiment analysis is invalid boolean representation", intro_sentiment_analysis_result.value[0].content)
+    conclusion_sentiment_analysis_result = await kernel.invoke(
+            kernel.plugins["SummaryPlugin"]["AreStudyFindingsSignificant"],
+            sk.KernelArguments(input=conclusion_chunk),
+        )
+    conclusion_shows_conclusive_significant_findings = parse_text_to_boolean(intro_sentiment_analysis_result.value[0].content)
+    if intro_shows_conclusive_significant_findings is not None:
+        print("Intro indicates conclusive + significant findings: ", conclusion_shows_conclusive_significant_findings)
+    else:
+        print("Intro sentiment analysis is invalid boolean representation", conclusion_sentiment_analysis_result.value[0].content)
+
+    # language detection
+    first_chunk_lang = detect_langs(intro_chunk)
+    print(first_chunk_lang)
+
     # entity extraction
-    final_extracted_entities = {}
     for i, chunk in enumerate(chunks):
-        if (
-            i > 0
-        ):  # skipping other chunks for now to get this code into main for collaboration, see next todo
-            continue
+        print(f"Processing chunk {i}")
         extract_entities_result = await kernel.invoke(
             kernel.plugins["EntityExtraction"]["ExtractMultipleEntities"],
             sk.KernelArguments(input=chunk),
         )
-
-        print(extract_entities_result.value[0].content)
-
+        success, extracted_entities = validate_and_format_json(extract_entities_result.value[0].content, None)
+        if success:
+            print(extracted_entities)
+        else:
+            print("Extracted entities result is poorly formatted json: ", extract_entities_result.value[0].content)
         # todo: test that output is well-formatted json
-        extracted_entities = json.load(extract_entities_result.value[0].content)
-
-        # todo: compare results from all chunks to find agreed upon entities.. start with just the first chunk
-        final_extracted_entities = extracted_entities
-
-    print(final_extracted_entities)
-
+        # extracted_entities = json.load(extract_entities_result.value[0].content)
+        # todo: contstruct final resultm comparing all chunks results
+        
+    print("completed")
     # todo: send final results to dataverse
+
+
+def validate_and_format_json(json_string, indent=4):
+    try:
+        # Attempt to parse the JSON string
+        parsed_json = json.loads(json_string)
+        # If successful, re-encode it with indentation for pretty printing
+        return True, json.dumps(parsed_json, indent=indent)
+    except json.JSONDecodeError:
+        # If parsing fails, return an error message
+        return False, None
+    
+def parse_text_to_boolean(text):
+    if text.lower() == "true":
+        return True
+    elif text.lower() == "false":
+        return False
+    else:
+        return None
