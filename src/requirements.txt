@@ -11,3 +11,4 @@ langchain
 langdetect
 python-dotenv
 semantic_kernel
+azure.storage.blob

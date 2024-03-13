@@ -11,6 +11,8 @@ import os
 import json
 import semantic_kernel as sk
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
+from azure.storage.blob import BlobServiceClient
+import datetime
 
 app = func.FunctionApp()
 
@@ -144,101 +146,152 @@ async def blob_trigger(myblob: func.InputStream) -> None:
     first_chunk_lang = detect_langs(intro_chunk)
     print(first_chunk_lang)
 
-    # entity extraction
-    extracted_entity_responses = []
-    extracted_stakeholders_responses = []
-    extracted_dates_responses = []
-    for i, chunk in enumerate(chunks):
-        print(f"Processing chunk {i}")
-        # multi entity extraction
+    # # entity extraction
+    # extracted_entity_responses = []
+    # extracted_stakeholders_responses = []
+    # extracted_dates_responses = []
+    # for i, chunk in enumerate(chunks):
+    #     print(f"Processing chunk {i}")
+    #     # multi entity extraction
 
-        extract_entities_result = await kernel.invoke(
-            kernel.plugins["EntityExtraction"]["ExtractMultipleEntities"],
-            sk.KernelArguments(input=chunk),
-        )
-        success, extracted_entities = validate_and_format_json(
-            extract_entities_result.value[0].content, None
-        )
-        if success is True:
-            extracted_entity_responses.append(extracted_entities)
-        else:
-            print(
-                f"Extracted entities result for chunk {i} is poorly formatted json: ",
-                extract_entities_result.value[0].content,
-            )
-        # stakeholders extraction
-        extract_stakeholders_result = await kernel.invoke(
-            kernel.plugins["EntityExtraction"]["ExtractStakeholders"],
-            sk.KernelArguments(input=chunk),
-        )
-        success, extracted_stakeholders = validate_and_format_json(
-            extract_stakeholders_result.value[0].content, None
-        )
-        if success is True:
-            extracted_stakeholders_responses.append(extracted_stakeholders)
-        else:
-            print(
-                f"Extracted entities result for chunk {i} is poorly formatted json: ",
-                extract_stakeholders_result.value[0].content,
-            )
-        # dates extraction
-        extract_dates_result = await kernel.invoke(
-            kernel.plugins["EntityExtraction"]["ExtractSignificantDates"],
-            sk.KernelArguments(input=chunk),
-        )
-        success, extracted_dates = validate_and_format_json(
-            extract_dates_result.value[0].content, None
-        )
-        if success is True:
-            extracted_dates_responses.append(extracted_dates)
-        else:
-            print(
-                f"Extracted entities result for chunk {i} is poorly formatted json: ",
-                extract_dates_result.value[0].content,
-            )
+    #     extract_entities_result = await kernel.invoke(
+    #         kernel.plugins["EntityExtraction"]["ExtractMultipleEntities"],
+    #         sk.KernelArguments(input=chunk),
+    #     )
+    #     success, extracted_entities = validate_and_format_json(
+    #         extract_entities_result.value[0].content, None
+    #     )
+    #     if success is True:
+    #         extracted_entity_responses.append(extracted_entities)
+    #     else:
+    #         print(
+    #             f"Extracted entities result for chunk {i} is poorly formatted json: ",
+    #             extract_entities_result.value[0].content,
+    #         )
+    #     # stakeholders extraction
+    #     extract_stakeholders_result = await kernel.invoke(
+    #         kernel.plugins["EntityExtraction"]["ExtractStakeholders"],
+    #         sk.KernelArguments(input=chunk),
+    #     )
+    #     success, extracted_stakeholders = validate_and_format_json(
+    #         extract_stakeholders_result.value[0].content, None
+    #     )
+    #     if success is True:
+    #         extracted_stakeholders_responses.append(extracted_stakeholders)
+    #     else:
+    #         print(
+    #             f"Extracted entities result for chunk {i} is poorly formatted json: ",
+    #             extract_stakeholders_result.value[0].content,
+    #         )
+    #     # dates extraction
+    #     extract_dates_result = await kernel.invoke(
+    #         kernel.plugins["EntityExtraction"]["ExtractSignificantDates"],
+    #         sk.KernelArguments(input=chunk),
+    #     )
+    #     success, extracted_dates = validate_and_format_json(
+    #         extract_dates_result.value[0].content, None
+    #     )
+    #     if success is True:
+    #         extracted_dates_responses.append(extracted_dates)
+    #     else:
+    #         print(
+    #             f"Extracted entities result for chunk {i} is poorly formatted json: ",
+    #             extract_dates_result.value[0].content,
+    #         )
 
-    # average entity extraction results across chunks
-    avg_extracted_entities_response = calculate_average_response(
-        extracted_entity_responses
-    )
-    avg_extracted_stakeholders_response = calculate_average_response(
-        extracted_stakeholders_responses
-    )
-    avg_extracted_dates_response = calculate_average_response(extracted_dates_responses)
+    # # average entity extraction results across chunks
+    # avg_extracted_entities_response = calculate_average_response(
+    #     extracted_entity_responses
+    # )
+    # avg_extracted_stakeholders_response = calculate_average_response(
+    #     extracted_stakeholders_responses
+    # )
+    # avg_extracted_dates_response = calculate_average_response(extracted_dates_responses)
 
-    success, extracted_entities = validate_and_format_json(
-        extract_entities_result.value[0].content, None
+    # success, extracted_entities = validate_and_format_json(
+    #     extract_entities_result.value[0].content, None
+    # )
+    # if success:
+    #     print(extracted_entities)
+
+    # bug in avg_extracted_entities_response, so using the first chunk for now to demo
+    arbitrary_chunk = chunks[0]
+
+    extracted_entities_result = await kernel.invoke(
+        kernel.plugins["EntityExtraction"]["ExtractMultipleEntities"],
+        sk.KernelArguments(input=arbitrary_chunk),
     )
-    if success:
-        print(extracted_entities)
+    _, extracted_entities = validate_and_format_json(
+        extracted_entities_result.value[0].content, None
+    )
+    extracted_stakeholders_result = await kernel.invoke(
+        kernel.plugins["EntityExtraction"]["ExtractStakeholders"],
+        sk.KernelArguments(input=arbitrary_chunk),
+    )
+    _, extracted_stakeholders = validate_and_format_json(
+        extracted_stakeholders_result.value[0].content, None
+    )
+    extracted_dates_result = await kernel.invoke(
+        kernel.plugins["EntityExtraction"]["ExtractSignificantDates"],
+        sk.KernelArguments(input=arbitrary_chunk),
+    )
+    _, extracted_dates = validate_and_format_json(
+        extracted_dates_result.value[0].content, None
+    )
 
     # aggregate all results into single dictionary
-
-    full_document_analysis_result = {}
-    full_document_analysis_result["intro_study_type_classification"] = (
+    deep_full_document_analysis_result = {}
+    deep_full_document_analysis_result["intro_study_type_classification"] = (
         intro_study_type_classification
     )
-    full_document_analysis_result["conclusion_study_type_classification"] = (
+    deep_full_document_analysis_result["conclusion_study_type_classification"] = (
         conclusion_study_type_classification
     )
-    full_document_analysis_result["intro_shows_conclusive_significant_findings"] = (
-        intro_shows_conclusive_significant_findings
-    )
-    full_document_analysis_result[
+    deep_full_document_analysis_result[
+        "intro_shows_conclusive_significant_findings"
+    ] = intro_shows_conclusive_significant_findings
+    deep_full_document_analysis_result[
         "conclusion_shows_conclusive_significant_findings"
     ] = conclusion_shows_conclusive_significant_findings
-    full_document_analysis_result["detected_language_result"] = first_chunk_lang
-    full_document_analysis_result["extracted_entities"] = (
-        avg_extracted_entities_response
+    lang_json = []
+    for lang in first_chunk_lang:
+        lang_json.append(convert_language_to_json(lang))
+    deep_full_document_analysis_result["detected_language_result"] = lang_json
+    deep_full_document_analysis_result["extracted_entities"] = extracted_entities
+    deep_full_document_analysis_result["extracted_stakeholders"] = (
+        extracted_stakeholders
     )
-    full_document_analysis_result["extracted_stakeholders"] = (
-        avg_extracted_stakeholders_response
-    )
-    full_document_analysis_result["extracted_dates"] = avg_extracted_dates_response
+    deep_full_document_analysis_result["extracted_dates"] = extracted_dates
 
-    full_document_analysis_result_json = json.loads(full_document_analysis_result)
-    print(json.dumps(full_document_analysis_result_json, indent=4))
-    # todo: send final results to dataverse
+    flat_full_document_analysis_result = flatten_json(
+        deep_full_document_analysis_result
+    )
+
+    flat_full_document_analysis_result_json = json.dumps(
+        flat_full_document_analysis_result, indent=4
+    )
+
+    print(flat_full_document_analysis_result_json)
+    upload_to_blob(flat_full_document_analysis_result_json)
+
+# todo: needs work to actually flatten instead of make strings
+def flatten_json(y):
+    out = {}
+
+    def flatten(x, name=""):
+        if type(x) is dict:
+            for a in x:
+                flatten(x[a], name + a + "_")
+        elif type(x) is list:
+            i = 0
+            for a in x:
+                flatten(a, name + str(i) + "_")
+                i += 1
+        else:
+            out[name[:-1]] = x
+
+    flatten(y)
+    return out
 
 
 def validate_and_format_json(json_string, indent=4):
@@ -288,3 +341,23 @@ def calculate_average_response(list_of_json_objects):
             average_response[key] = max(responses, key=responses.get)
         responses = {}
     return average_response
+
+def convert_language_to_json(language):
+    return {"language": language.lang, "probability": language.prob}
+
+def upload_to_blob(extracted_entities):
+    try:
+        # Create a blob client using the local file name as the name for the blob
+
+        conn_str = os.getenv("INCOMING_BLOB_STORAGE_CONNECTION")
+        blob_service_client = BlobServiceClient.from_connection_string(conn_str)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        blob_client = blob_service_client.get_blob_client("outputs", f"extracted_content_{timestamp}.json")
+
+        print("\nUploading to Azure Storage as blob:\n\t" + "extracted_content.json")
+
+        # Upload the created file
+        blob_client.upload_blob(extracted_entities, overwrite=True)
+    except Exception as ex:
+        print('Exception:')
+        print(ex)
