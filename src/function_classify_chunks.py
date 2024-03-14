@@ -9,7 +9,7 @@ classify_chunks_blueprint = df.Blueprint()
 
 
 @classify_chunks_blueprint.activity_trigger(input_name="chunks")
-async def classify_chunks(chunks: List[Document]) -> dict:
+async def classify_chunks(chunks: List[Document]) -> tuple[str, dict]:
     kernel = KernelFactory.create_kernel()
 
     # for larger documents the chunk size maybe too large for the plugin to handle simultaneously
@@ -20,8 +20,8 @@ async def classify_chunks(chunks: List[Document]) -> dict:
         sk.KernelArguments(input=joined_chunks),
     )
 
-    # Attempt to parse the JSON string
+    # Attempt to parse the JSON string, recently got back single-quotes around property values so this prompt needs work to avoid json errors
     try:
-        return json.loads(skresult.value[0].content)
+        return ("classification", json.loads(skresult.value[0].content))
     except json.JSONDecodeError:
-        return None
+        return ("classification", None)

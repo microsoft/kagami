@@ -1,99 +1,109 @@
 import azure.durable_functions as df
-import json, os
+from study import Study
 from typing import List
 
 find_mode_entities_blueprint = df.Blueprint()
 
 
-@find_mode_entities_blueprint.activity_trigger(input_name="allExtractedEntities")
-def find_mode_entities(allExtractedEntities) -> dict:
-    # : List[dict]
-    # what is type of input?
-    calculated_mode_response = calculate_mode_response(allExtractedEntities)
-    return calculated_mode_response
+# I want to turn the type of the input to a list of Study objects but run into
+# serialization issues with Azure function
+@find_mode_entities_blueprint.activity_trigger(input_name="studies")
+def find_mode_entities(studies: List[any]) -> dict:
 
+    possible_duration_values = {}
+    possible_drug_or_compound_values = {}
+    possible_route_of_administration_values = {}
+    possible_internal_study_number_values = {}
+    possible_external_study_number_values = {}
+    possible_test_facility_values = {}
 
-def calculate_mode_response(list_of_json_objects, printObjs=False):
-    if len(list_of_json_objects) == 0:
-        return None
+    mode_study = Study()
 
-    # remove any None objects from the list
-    list_of_json_objects = [val for val in list_of_json_objects if val is not None]
+    for study in studies:
+        count_property_value(study, "duration", possible_duration_values)
+        count_property_value(
+            study, "drug_or_compound", possible_drug_or_compound_values
+        )
+        count_property_value(
+            study, "route_of_administration", possible_route_of_administration_values
+        )
+        count_property_value(
+            study, "internal_study_number", possible_internal_study_number_values
+        )
+        count_property_value(
+            study, "external_study_number", possible_external_study_number_values
+        )
+        count_property_value(study, "test_facility", possible_test_facility_values)
+        # we won't calculate mode for stakeholders, significant_dates, or species
+        # as these are lists where you might find valid unique entries
+        # throughout the original document, so instead we aggregate list results
+        try_append_values(study, "stakeholders", mode_study.stakeholders)
+        try_append_values(study, "significant_dates", mode_study.significant_dates)
+        try_append_values(study, "species", mode_study.species)
 
-    if printObjs:
-        print("List of JSON Objects: ", list_of_json_objects)
-
-    first_entry = list_of_json_objects[0]
-    # hacky conversion of other types to dictionary for keys
-    schema = (
-        json.loads(first_entry)
-        if isinstance(first_entry, str)
-        else json.loads(json.dumps(first_entry))
+    mode_study.duration = try_get_mode_value(possible_duration_values)
+    mode_study.drug_or_compound = try_get_mode_value(possible_drug_or_compound_values)
+    mode_study.route_of_administration = try_get_mode_value(
+        possible_route_of_administration_values
     )
+    mode_study.internal_study_number = try_get_mode_value(
+        possible_internal_study_number_values
+    )
+    mode_study.external_study_number = try_get_mode_value(
+        possible_external_study_number_values
+    )
+    mode_study.test_facility = try_get_mode_value(possible_test_facility_values)
 
-    if printObjs:
-        print("Schema: ", schema)
-
-    property_keys = schema.keys()
-
-    mode_response = {}
-    responses = {}
-
-    for key in property_keys:
-        if printObjs:
-            print("Beginning loop for key: ", key)
-        for obj in list_of_json_objects:
-            if printObjs:
-                print("Evaluating: ", obj)
-
-            # hacky conversion of other types to dictionary for keysl see above
-            json_obj = (
-                json.loads(obj) if isinstance(obj, str) else json.loads(json.dumps(obj))
-            )
-
-            flatten_json(json_obj)
-            if isinstance(obj, list):
-                print(
-                    f"{obj} is a list in {list_of_json_objects}", list_of_json_objects
-                )
-
-            value = json_obj[key]
-
-            # todo: determine how to handle list values, for now skipping to prepare for demo
-
-            if isinstance(value, list):
-                continue
-
-            if json_obj[key] in responses:
-                responses[value] += 1
-            else:
-                responses[value] = 1
-
-        if len(responses) > 0:
-            mode_response[key] = max(responses, key=responses.get)
-        responses = {}
-    return mode_response
+    return {
+        "duration": mode_study.duration,
+        "species": mode_study.species,
+        "drug_or_compound": mode_study.drug_or_compound,
+        "route_of_administration": mode_study.route_of_administration,
+        "internal_study_number": mode_study.internal_study_number,
+        "external_study_number": mode_study.external_study_number,
+        "test_facility": mode_study.test_facility,
+        "stakeholders": mode_study.stakeholders,
+        "significant_dates": mode_study.significant_dates,
+    }
 
 
-def flatten_list_of_list_strings(original_list):
-    list_of_lists = [json.loads(val) for val in original_list if val is not None]
-    return [val for sublist in list_of_lists for val in sublist]
+# seems like python is passing by reference so we don't need to return the collection
+def count_property_value(object, property_key, values_collection):
+    try:
+        value = object[property_key]
 
+        # skip None values, not every chunk will find enough data to support a good guess
+        if value is None:
+            return
 
-def flatten_json(json_obj):
-    out = {}
-
-    def flatten(x, name=""):
-        if type(x) is dict:
-            for a in x:
-                flatten(x[a], name + a + "_")
-        elif type(x) is list:
-            i = 0
-            for a in x:
-                flatten(a, name + str(i) + "_")
-                i += 1
+        if value in values_collection:
+            values_collection[value] += 1
         else:
-            out[name[:-1]] = x
+            values_collection[value] = 1
+    except KeyError or AttributeError:
+        pass
+    # we'll ignore ones we can't read for now
 
-    flatten(json_obj)
-    return out
+
+def try_append_values(object, property_key, values_collection):
+    try:
+        additional_values = object[property_key]
+        if (
+            isinstance(additional_values, list)
+            and isinstance(values_collection, list)
+            and len(additional_values) > 0
+        ):
+            for val in additional_values:
+                values_collection.append(val)
+    except (KeyError, AttributeError):
+        pass
+    # we'll ignore ones we can't read for now
+
+
+def try_get_mode_value(values_collection):
+    try:
+        mode_val = max(values_collection, key=values_collection.get)
+        return mode_val
+    except (AttributeError, ValueError, TypeError, KeyError):
+        return None
+    # we'll ignore ones we can't read for now

@@ -12,5 +12,6 @@ def get_meta_chunks(chunks: List[Document]) -> str:
     # potentially a summarization of individual chunks and then asking AOAI to choose relevant ones
     # with preference given to the beginning and end of the document
     meta_chunks: List[Document] = []
-    meta_chunks.append(chunks[0]).append(chunks[-1])
+    meta_chunks.append(chunks[0])
+    meta_chunks.append(chunks[-1])
     return meta_chunks

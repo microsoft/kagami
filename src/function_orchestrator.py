@@ -1,5 +1,7 @@
 import azure.durable_functions as df
-import logging
+import logging, os
+import semantic_kernel as sk
+from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 
 orchestrator_blueprint = df.Blueprint()
 
@@ -9,24 +11,45 @@ def orchestrator(context: df.DurableOrchestrationContext):
     file_uri: str = context.get_input()
 
     if context.is_replaying is False:
-        logging.info(f"Starting orchestrator for {file_uri}...")
+        logging.info(f"Orchestration {context.instance_id}: Starting for {file_uri}.")
 
     chunks = yield context.call_activity("chunk_file", file_uri)
-    # gets intro and conclusion chunks
-    meta_chunks = yield context.call_activity("get_meta_chunks", chunks)
-    classification_analysis = yield context.call_activity(
-        "classify_chunks", meta_chunks
-    )
-    sentiment_analysis = yield context.call_activity("analyze_sentiment", meta_chunks)
-    detected_language = yield context.call_activity("detect_language", meta_chunks)
-    extracted_entities = yield context.call_activity("extract_entities", chunks)
 
-    yield context.call_activity(
-        "store_results",
-        {
-            "classification": classification_analysis,
-            "sentiment": sentiment_analysis,
-            "language": detected_language,
-            "entities": extracted_entities,
-        },
+    meta_chunks = yield context.call_activity("get_meta_chunks", chunks)
+
+    if context.is_replaying is False:
+        logging.info(
+            f"Orchestration {context.instance_id}: {len(chunks)} chunks found. {len(meta_chunks)} identified."
+        )
+
+    tasks = [
+        context.call_activity("analyze_sentiment", meta_chunks),
+        context.call_activity("detect_language", meta_chunks),
+        context.call_activity("classify_chunks", meta_chunks),
+    ]
+    metadata_analysis_results = yield context.task_all(tasks)
+
+    final_result = {}
+
+    for k, v in metadata_analysis_results:
+        final_result[k] = v
+
+    extraction_tasks = []
+    for chunk in chunks:
+        extraction_tasks.append(context.call_activity("extract_entities", chunk))
+
+    all_extracted_entity_results = yield context.task_all(extraction_tasks)
+
+    if context.is_replaying is False:
+        logging.info(
+            f"Orchestration {context.instance_id}: entity extraction performed over all chunks."
+        )
+
+    final_result["mode_entities"] = yield context.call_activity(
+        "find_mode_entities", all_extracted_entity_results
     )
+
+    if context.is_replaying is False:
+        logging.info(f"Orchestration {context.instance_id}: mode entities calculated.")
+
+    yield context.call_activity("store_results", final_result)
