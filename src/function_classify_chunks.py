@@ -9,7 +9,7 @@ classify_chunks_blueprint = df.Blueprint()
 
 
 @classify_chunks_blueprint.activity_trigger(input_name="chunks")
-async def classify_chunks(chunks: List[Document]) -> str:
+async def classify_chunks(chunks: List[Document]) -> dict:
     kernel = KernelFactory.create_kernel()
 
     # for larger documents the chunk size maybe too large for the plugin to handle simultaneously
@@ -24,4 +24,4 @@ async def classify_chunks(chunks: List[Document]) -> str:
     try:
         return json.loads(skresult.value[0].content)
     except json.JSONDecodeError:
-        return False
+        return None
