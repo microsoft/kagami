@@ -60,6 +60,8 @@ async def extract_entities(chunk: Document) -> Study:
     elapsed_time = end_time - start_time
     print(f"extract_entities took {elapsed_time} seconds for a {tokens} token chunk.")
 
+
+
     # not sure why im having such difficulty serializing this for passing between functions
     return {
         "duration": study.duration,

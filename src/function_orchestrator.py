@@ -14,7 +14,7 @@ def orchestrator(context: df.DurableOrchestrationContext):
     chunks = yield context.call_activity("chunk_file", file_uri)
 
     has_handwriting = yield context.call_activity("check_handwriting", file_uri)
-  
+
     meta_chunks = yield context.call_activity("get_meta_chunks", chunks)
 
     if context.is_replaying is False:
@@ -50,10 +50,31 @@ def orchestrator(context: df.DurableOrchestrationContext):
     )
 
     final_result["has_handwriting"] = has_handwriting
-  
+
     if context.is_replaying is False:
         logging.info(f"Orchestration {context.instance_id}: mode entities calculated.")
 
-    yield context.call_activity("store_results", final_result)
+    flatten_final_result = flatten_json(final_result)
 
-    return final_result
+    yield context.call_activity("store_results", flatten_final_result)
+
+    return flatten_final_result
+
+
+def flatten_json(json_obj):
+    out = {}
+
+    def flatten(x, name=""):
+        if type(x) is dict:
+            for a in x:
+                flatten(x[a], name + a + "_")
+        elif type(x) is list:
+            i = 0
+            for a in x:
+                flatten(a, name + str(i) + "_")
+                i += 1
+        else:
+            out[name[:-1]] = x
+
+    flatten(json_obj)
+    return out
