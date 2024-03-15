@@ -55,3 +55,5 @@ def orchestrator(context: df.DurableOrchestrationContext):
         logging.info(f"Orchestration {context.instance_id}: mode entities calculated.")
 
     yield context.call_activity("store_results", final_result)
+
+    return final_result

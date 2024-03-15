@@ -1,6 +1,7 @@
 import azure.durable_functions as df
 from study import Study
 from typing import List
+import logging, time
 
 find_mode_entities_blueprint = df.Blueprint()
 
@@ -9,6 +10,7 @@ find_mode_entities_blueprint = df.Blueprint()
 # serialization issues with Azure function
 @find_mode_entities_blueprint.activity_trigger(input_name="studies")
 def find_mode_entities(studies: List[any]) -> dict:
+    start_time = time.time()
 
     possible_duration_values = {}
     possible_drug_or_compound_values = {}
@@ -53,6 +55,10 @@ def find_mode_entities(studies: List[any]) -> dict:
         possible_external_study_number_values
     )
     mode_study.test_facility = try_get_mode_value(possible_test_facility_values)
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"find_mode_entities took {elapsed_time} seconds for {len(studies)} entity results.")
 
     return {
         "duration": mode_study.duration,
