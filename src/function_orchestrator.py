@@ -60,7 +60,6 @@ def orchestrator(context: df.DurableOrchestrationContext):
 
     return flatten_final_result
 
-
 def flatten_json(json_obj):
     out = {}
 
@@ -69,12 +68,33 @@ def flatten_json(json_obj):
             for a in x:
                 flatten(x[a], name + a + "_")
         elif type(x) is list:
-            i = 0
-            for a in x:
-                flatten(a, name + str(i) + "_")
-                i += 1
+            for i, a in enumerate(x):
+                if isinstance(a, str):
+                    # If the list element is a string, join it with commas
+                    out[name[:-1]] = ",".join(x)
+                else:
+                    flatten(a, name + str(i) + "_")
         else:
             out[name[:-1]] = x
 
     flatten(json_obj)
     return out
+
+
+# def flatten_json(json_obj):
+#     out = {}
+
+#     def flatten(x, name=""):
+#         if type(x) is dict:
+#             for a in x:
+#                 flatten(x[a], name + a + "_")
+#         elif type(x) is list:
+#             i = 0
+#             for a in x:
+#                 flatten(a, name + str(i) + "_")
+#                 i += 1
+#         else:
+#             out[name[:-1]] = x
+
+#     flatten(json_obj)
+#     return out
