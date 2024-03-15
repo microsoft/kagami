@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{48593503-a4d2-4845-8bf9-b6c691ec5869}</formid>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form headerdensity="HighWithControls">
+      <tabs>
+        <tab verticallayout="true" id="{12f575cb-64ea-42ba-adc7-2c89207af57c}" IsUserDefined="1">
+          <labels>
+            <label description="General" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section showlabel="false" showbar="false" IsUserDefined="0" id="{5982fdd8-5573-4815-be89-769d89d281e4}">
+                  <labels>
+                    <label description="General" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{f8254078-4d7c-4a8d-a800-e56a25eed91c}">
+                        <labels>
+                          <label description="Name" languagecode="1033" />
+                        </labels>
+                        <control id="mscw_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="mscw_name" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{4ea1604e-c8e5-4544-a75d-9d8c660485d2}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Origination Request" languagecode="1033" />
+                        </labels>
+                        <control id="mscw_originationrequestid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="mscw_originationrequestid" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{5b062a32-24b9-4052-b053-c5b147ec0ab8}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Doc SubType" languagecode="1033" />
+                        </labels>
+                        <control id="mscw_docsubtypeid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="mscw_docsubtypeid" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{dfdd9c11-4086-4a50-b96b-26ffe4ec63df}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Study Type" languagecode="1033" />
+                        </labels>
+                        <control id="mscw_studytypeid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="mscw_studytypeid" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{c29782a5-e229-49c7-8e2d-c17da704a030}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Study SubType" languagecode="1033" />
+                        </labels>
+                        <control id="mscw_studysubtypeid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="mscw_studysubtypeid" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{b03d8b70-19a4-4a57-84c4-538c50c5e91b}">
+                        <labels>
+                          <label description="Owner" languagecode="1033" />
+                        </labels>
+                        <control id="ownerid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="ownerid" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <header id="{c2624cd9-e913-4f04-ad6c-5b3757dc4710}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{7fc68c35-f5d5-4f1f-a2d9-a765f71eb7bf}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{a9aeb8f4-75a8-4d61-b53b-a66ced6b8e28}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{4c6aab4f-8901-4083-be65-33dae96ae1e7}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </header>
+      <footer id="{cb7e8653-30f9-40c2-bbbf-88863db1dea6}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{ec4fea71-bf51-49ef-b0ec-f3a253f8f88c}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{14081623-0687-4574-a2f8-ea0af07b1c3a}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{aeeb57e0-fabc-4707-9847-b1f53833e0bc}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </footer>
+      <DisplayConditions Order="0" FallbackForm="true">
+        <Everyone />
+      </DisplayConditions>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Information" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="A form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>

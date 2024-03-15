@@ -1,0 +1,247 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_azureblob": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "mscw_sharedazureblob_286c7"
+        },
+        "api": {
+          "name": "shared_azureblob"
+        }
+      },
+      "shared_commondataserviceforapps": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "mscw_sharedcommondataserviceforapps_b96c2"
+        },
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_blob_is_added_or_modified_(properties_only)_(V2)": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "splitOn": "@triggerOutputs()?['body']",
+          "metadata": {
+            "JTJmZG9jcw==": "/docs",
+            "operationMetadataId": "b7d5c025-51bb-468b-9937-95a0c79264ed"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "AccountNameFromSettings",
+              "folderId": "JTJmZG9jcw==",
+              "maxFileCount": 10
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
+              "operationId": "OnUpdatedFiles_V2",
+              "connectionName": "shared_azureblob"
+            }
+          }
+        }
+      },
+      "actions": {
+        "Parse_JSON": {
+          "runAfter": {
+            "Content_to_JSON_String": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "24b4f57f-53ad-4b28-8d22-bfa5c148c1be"
+          },
+          "type": "ParseJson",
+          "inputs": {
+            "content": "@outputs('Content_to_JSON_String')",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "documents": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "DocID": {
+                        "type": "string"
+                      },
+                      "DocType": {
+                        "type": "string"
+                      },
+                      "DocSubType": {
+                        "type": "string"
+                      },
+                      "StudyType": {
+                        "type": "string"
+                      },
+                      "StudySubType": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "DocID",
+                      "DocType"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Apply_to_each": {
+          "foreach": "@body('Parse_JSON')?['documents']",
+          "actions": {
+            "Create_Request_record": {
+              "metadata": {
+                "operationMetadataId": "c46bfa47-7984-44c0-b5d1-a3ece0423d91"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "mscw_archiverequests",
+                  "item/mscw_name": "@items('Apply_to_each')?['DocID']",
+                  "item/mscw_blobname": "@triggerOutputs()?['body/Path']",
+                  "item/mscw_extractionjson": "@outputs('Content_to_JSON_String')"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "CreateRecord",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              }
+            },
+            "Doc_Info_JSON": {
+              "runAfter": {
+                "Create_Request_record": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "0dc54fc4-0c69-49d5-aea4-da913b6c4968"
+              },
+              "type": "Compose",
+              "inputs": "@string(items('Apply_to_each'))"
+            },
+            "Switch": {
+              "runAfter": {
+                "Doc_Info_JSON": [
+                  "Succeeded"
+                ]
+              },
+              "cases": {
+                "Case": {
+                  "case": "Protocol",
+                  "actions": {
+                    "Run_CHILD_-_Process_Protocol_Doc": {
+                      "metadata": {
+                        "operationMetadataId": "3a22dc88-df62-44d8-9cdc-7270359dd134"
+                      },
+                      "type": "Workflow",
+                      "inputs": {
+                        "host": {
+                          "workflowReferenceName": "9443e989-8ddc-ee11-904d-000d3a578542"
+                        },
+                        "body": {
+                          "text_2": "@outputs('Doc_Info_JSON')",
+                          "text": "@outputs('Create_Request_record')?['body/mscw_archiverequestid']"
+                        }
+                      }
+                    }
+                  }
+                },
+                "Case_2": {
+                  "case": "Report",
+                  "actions": {
+                    "Run_a_Child_Flow": {
+                      "metadata": {
+                        "operationMetadataId": "e5a57b9f-960b-413e-b259-8749bd6c9c29"
+                      },
+                      "type": "Workflow",
+                      "inputs": {
+                        "host": {
+                          "workflowReferenceName": "63b6d46d-c7dc-ee11-904d-000d3a57869b"
+                        },
+                        "body": {
+                          "text_2": "@outputs('Doc_Info_JSON')",
+                          "text": "@outputs('Create_Request_record')?['body/mscw_archiverequestid']"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "actions": {}
+              },
+              "expression": "@items('Apply_to_each')?['DocType']",
+              "metadata": {
+                "operationMetadataId": "689cfd94-8f19-4de3-ba39-be568033cba0"
+              },
+              "type": "Switch"
+            }
+          },
+          "runAfter": {
+            "Parse_JSON": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "7b397ba2-e9bf-4828-95ac-09723133f763"
+          },
+          "type": "Foreach"
+        },
+        "Get_blob_content_(V2)": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "161f1bbb-9f33-4eb3-bb83-7bb14690d275"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "AccountNameFromSettings",
+              "id": "@triggerOutputs()?['body/Path']",
+              "inferContentType": true
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
+              "operationId": "GetFileContent_V2",
+              "connectionName": "shared_azureblob"
+            }
+          }
+        },
+        "Content_to_JSON_String": {
+          "runAfter": {
+            "Get_blob_content_(V2)": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "8eda7aba-fdaf-4cd0-be76-2bdb93a40bdf"
+          },
+          "type": "Compose",
+          "inputs": "@base64ToString(base64(body('Get_blob_content_(V2)')))"
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

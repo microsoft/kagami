@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{97ada7ee-c7aa-44b8-b792-ba765569a757}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="mscw_name" select="1" icon="1" preview="1">
+        <row name="result" id="mscw_archiverequestid">
+          <cell name="mscw_name" width="85" />
+          <cell name="mscw_extractionjson" width="276" />
+          <cell name="mscw_blobname" width="270" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="mscw_archiverequest">
+          <attribute name="mscw_archiverequestid" />
+          <attribute name="mscw_name" />
+          <attribute name="createdon" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+          <attribute name="mscw_extractionjson" />
+          <attribute name="mscw_blobname" />
+          <order attribute="createdon" descending="true" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Active Archive Requests" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

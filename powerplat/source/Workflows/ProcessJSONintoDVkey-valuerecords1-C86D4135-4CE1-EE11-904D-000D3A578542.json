@@ -1,0 +1,212 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_azureblob": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "mscw_sharedazureblob_286c7"
+        },
+        "api": {
+          "name": "shared_azureblob"
+        }
+      },
+      "shared_commondataserviceforapps": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "mscw_sharedcommondataserviceforapps_b96c2"
+        },
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_blob_is_added_or_modified_(properties_only)_(V2)": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "splitOn": "@triggerOutputs()?['body']",
+          "metadata": {
+            "JTJmZG9jcw==": "/docs",
+            "operationMetadataId": "b7d5c025-51bb-468b-9937-95a0c79264ed",
+            "JTJmb3V0cHV0cw==": "/outputs"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "AccountNameFromSettings",
+              "folderId": "JTJmb3V0cHV0cw==",
+              "maxFileCount": 10
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
+              "connectionName": "shared_azureblob",
+              "operationId": "OnUpdatedFiles_V2"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "actions": {
+        "Get_blob_content_(V2)": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "161f1bbb-9f33-4eb3-bb83-7bb14690d275"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "AccountNameFromSettings",
+              "id": "@triggerOutputs()?['body/Path']",
+              "inferContentType": true
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
+              "connectionName": "shared_azureblob",
+              "operationId": "GetFileContent_V2"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Content_to_JSON": {
+          "runAfter": {
+            "Set_Properties": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "8eda7aba-fdaf-4cd0-be76-2bdb93a40bdf"
+          },
+          "type": "Compose",
+          "inputs": "@base64ToString(base64(body('Get_blob_content_(V2)')))"
+        },
+        "Set_Properties": {
+          "runAfter": {
+            "Get_blob_content_(V2)": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "2b929e05-c8eb-4c0a-b91f-29c9c3ca85e5"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Properties",
+                "type": "array",
+                "value": [
+                  "intro_study_type_classification",
+                  "conclusion_study_type_classification",
+                  "intro_shows_conclusive_significant_findings",
+                  "conclusion_shows_conclusive_significant_findings",
+                  "detected_language_result_0_language",
+                  "detected_language_result_0_probability",
+                  "extracted_entities",
+                  "extracted_stakeholders",
+                  "extracted_dates"
+                ]
+              }
+            ]
+          }
+        },
+        "Apply_to_each_document_object": {
+          "foreach": "@json(outputs('Content_to_JSON')).documents",
+          "actions": {
+            "Record_each_key-value_pair": {
+              "foreach": "@variables('Properties')",
+              "actions": {
+                "key": {
+                  "metadata": {
+                    "operationMetadataId": "1b21b825-9fb3-4cb5-b2ec-91bb34351c68"
+                  },
+                  "type": "Compose",
+                  "inputs": "@items('Record_each_key-value_pair')"
+                },
+                "Add_a_new_extracted_entity_key-value_pair": {
+                  "runAfter": {
+                    "key": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "75e59220-843c-4456-9fd4-43d27dca8291"
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "entityName": "mscw_extractedentities",
+                      "item/mscw_name": "@outputs('key')",
+                      "item/mscw_ArchiveRequestId@odata.bind": "mscw_archiverequests\\@{outputs('Create_Request')?['body/mscw_archiverequestid']}",
+                      "item/mscw_value": "@items('Apply_to_each_document_object')?[outputs('key')]"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "connectionName": "shared_commondataserviceforapps",
+                      "operationId": "CreateRecord"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  }
+                }
+              },
+              "runAfter": {
+                "Create_Request": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "b1caebf4-8d5e-493a-ab6c-788c31b851c1"
+              },
+              "type": "Foreach"
+            },
+            "Create_Request": {
+              "metadata": {
+                "operationMetadataId": "eeea08a3-68f1-4383-b640-8f61fe363171"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "mscw_archiverequests",
+                  "item/mscw_name": "Request @{utcNow()}",
+                  "item/mscw_blobname": "@triggerOutputs()?['body/Path']",
+                  "item/mscw_extractionjson": "@items('Apply_to_each_document_object')"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "CreateRecord"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            }
+          },
+          "runAfter": {
+            "Content_to_JSON": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "0f670158-6b85-445a-9c13-a59699ada0bd"
+          },
+          "type": "Foreach"
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
