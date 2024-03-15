@@ -4,7 +4,7 @@ import azure.durable_functions as df
 import logging
 
 from function_orchestrator import orchestrator_blueprint
-from function_chunk_file import chunker_blueprint
+from function_chunk_file import chunk_file_blueprint
 from function_get_meta_chunks import get_meta_chunks_blueprint
 from function_classify_chunks import classify_chunks_blueprint
 from function_analyze_sentiment import analyze_sentiment_blueprint
@@ -14,7 +14,7 @@ from function_find_mode_entities import find_mode_entities_blueprint
 
 app = df.DFApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 app.register_functions(orchestrator_blueprint)
-app.register_functions(chunker_blueprint)
+app.register_functions(chunk_file_blueprint)
 app.register_functions(get_meta_chunks_blueprint)
 app.register_functions(classify_chunks_blueprint)
 app.register_functions(analyze_sentiment_blueprint)

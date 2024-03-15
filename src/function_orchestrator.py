@@ -1,7 +1,5 @@
 import azure.durable_functions as df
-import logging, os
-import semantic_kernel as sk
-from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
+import logging
 
 orchestrator_blueprint = df.Blueprint()
 
@@ -15,6 +13,8 @@ def orchestrator(context: df.DurableOrchestrationContext):
 
     chunks = yield context.call_activity("chunk_file", file_uri)
 
+    has_handwriting = yield context.call_activity("check_handwriting", file_uri)
+  
     meta_chunks = yield context.call_activity("get_meta_chunks", chunks)
 
     if context.is_replaying is False:
@@ -49,6 +49,8 @@ def orchestrator(context: df.DurableOrchestrationContext):
         "find_mode_entities", all_extracted_entity_results
     )
 
+    final_result["has_handwriting"] = has_handwriting
+  
     if context.is_replaying is False:
         logging.info(f"Orchestration {context.instance_id}: mode entities calculated.")
 

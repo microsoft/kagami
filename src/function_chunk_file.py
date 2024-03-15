@@ -2,15 +2,14 @@ import azure.durable_functions as df
 from langchain_community.document_loaders import AzureAIDocumentIntelligenceLoader
 from langchain.text_splitter import MarkdownHeaderTextSplitter
 from langchain_core.documents import Document
-import logging, os
+import os
 from typing import List
 
-chunker_blueprint = df.Blueprint()
+chunk_file_blueprint = df.Blueprint()
 
 
-@chunker_blueprint.activity_trigger(input_name="fileUri")
+@chunk_file_blueprint.activity_trigger(input_name="fileUri")
 def chunk_file(fileUri: str) -> List[Document]:
-    logging.info(f"Called chunker on {fileUri}!")
     endpoint = os.getenv("AI_MULTISERVICE_ENDPOINT")
     key = os.getenv("AI_MULTISERVICE_KEY")
     ai_doc_intel_loader = AzureAIDocumentIntelligenceLoader(
