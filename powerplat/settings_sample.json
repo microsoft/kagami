@@ -1,6 +1,6 @@
 {
-    "sourceEnvURL": "https://orgc3902d96.api.crm.dynamics.com",
-    "targetEnvURL": "https://org3a8c203e.api.crm.dynamics.com",
+    "sourceEnvURL": "",
+    "targetEnvURL": "",
     "solutionDir": ".\\powerplat\\solutions\\",
     "solutionName": "DocArchiveRequest",
     "solutionVersion": "1.0.0.1",

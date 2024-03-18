@@ -403,3 +403,6 @@ __azurite_*.json
 __blobstorage__/
 __queuestorage__/
 notebooks/.env
+
+powerplat\settings.json
+powerplat/settings.json
