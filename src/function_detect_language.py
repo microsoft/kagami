@@ -24,8 +24,10 @@ def detect_language(chunks: List[Document]) -> tuple[str, List[dict]]:
 
     languages: List[dict] = []
 
+    # flattening this into a str that can be concatenated into comma-delimited result for dataverse
+    # but you could also drop the probability and enforce a threshold probability for inclusion
     for lang in languages_result:
-        languages.append({"language": lang.lang, "probability": lang.prob})
+        languages.append(f"{lang.lang}: {lang.prob}")
 
     end_time = time.time()
     elapsed_time = end_time - start_time
