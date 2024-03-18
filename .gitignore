@@ -417,3 +417,4 @@ __azurite_db*__.json
 .python_packages
 
 .venv/
+powerplat/settings.json
