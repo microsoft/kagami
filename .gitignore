@@ -406,3 +406,4 @@ notebooks/.env
 
 .venv/
 src/local.settings.json
+powerplat/settings.json
