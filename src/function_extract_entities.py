@@ -2,15 +2,21 @@ import azure.durable_functions as df
 from langchain_core.documents import Document
 from kernel_factory import KernelFactory
 import semantic_kernel as sk
-import json
+import json, logging, time
 
 from study import Study
+
+import tiktoken
 
 extract_entities_blueprint = df.Blueprint()
 
 
 @extract_entities_blueprint.activity_trigger(input_name="chunk")
 async def extract_entities(chunk: Document) -> Study:
+    cl100k_base = tiktoken.get_encoding("cl100k_base")
+    tokens = len(cl100k_base.encode(chunk))
+    start_time = time.time()
+
     kernel = KernelFactory.create_kernel()
 
     multi_entity_result = await kernel.invoke(
@@ -32,27 +38,30 @@ async def extract_entities(chunk: Document) -> Study:
     study = Study()
     try:
         study = Study(multi_entity_result.value[0].content)
-    except json.JSONDecodeError:
-        print(
-            f"Error parsing multi_entity_result on {multi_entity_result.value[0].content}"
-        )
+    except (json.JSONDecodeError, KeyError, AttributeError) as e:
+        pass
 
     try:
         # this needs better consistent json output before refining the parsing
         name_list = json.loads(stakeholders_result.value[0].content)
         study.stakeholders = [entry["name"] for entry in name_list]
-    except (json.JSONDecodeError, KeyError):
-        print(
-            f"Error parsing multi_entity_result on {stakeholders_result.value[0].content}"
-        )
+    except (json.JSONDecodeError, KeyError, AttributeError) as e:
+        pass
 
     try:
         # this needs better consistent json output before refining the parsing
         date_list = json.loads(dates_result.value[0].content)
         study.significant_dates = [entry["date"] for entry in date_list]
-    except (json.JSONDecodeError, KeyError):
-        print(f"Error parsing multi_entity_result on {dates_result.value[0].content}")
+    except (json.JSONDecodeError, KeyError, AttributeError) as e:
+        pass
     
+    # considering following lines negligible to performance and thus out of scope for measurement
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"extract_entities took {elapsed_time} seconds for a {tokens} token chunk.")
+
+
+
     # not sure why im having such difficulty serializing this for passing between functions
     return {
         "duration": study.duration,
