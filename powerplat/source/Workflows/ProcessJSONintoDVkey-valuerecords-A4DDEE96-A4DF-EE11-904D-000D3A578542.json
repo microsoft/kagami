@@ -108,15 +108,22 @@
                 "name": "Properties",
                 "type": "array",
                 "value": [
-                  "intro_study_type_classification",
-                  "conclusion_study_type_classification",
-                  "intro_shows_conclusive_significant_findings",
-                  "conclusion_shows_conclusive_significant_findings",
-                  "detected_language_result_0_language",
-                  "detected_language_result_0_probability",
-                  "extracted_entities",
-                  "extracted_stakeholders",
-                  "extracted_dates"
+                  "is_conclusive_and_significant",
+                  "languages_0_language",
+                  "languages_0_probability",
+                  "classification",
+                  "mode_entities_duration",
+                  "mode_entities_species_0",
+                  "mode_entities_species_1",
+                  "mode_entities_species_2",
+                  "mode_entities_species_3",
+                  "mode_entities_drug_or_compound",
+                  "mode_entities_route_of_administration",
+                  "mode_entities_internal_study_number",
+                  "mode_entities_external_study_number",
+                  "mode_entities_test_facility",
+                  "mode_entities_stakeholders_0",
+                  "has_handwriting"
                 ]
               }
             ]

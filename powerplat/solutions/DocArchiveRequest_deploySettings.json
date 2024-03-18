@@ -1,0 +1,15 @@
+{
+  "EnvironmentVariables": [],
+  "ConnectionReferences": [
+    {
+      "LogicalName": "mscw_sharedazureblob_286c7",
+      "ConnectionId": "99a625703aca42379792c00cede4304d",
+      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_azureblob"
+    },
+    {
+      "LogicalName": "mscw_sharedcommondataserviceforapps_b96c2",
+      "ConnectionId": "1daf31b3785049c0ae225d8ceeec5749",
+      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+    }
+  ]
+}
