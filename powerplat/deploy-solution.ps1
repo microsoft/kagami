@@ -14,10 +14,12 @@
 $settings = Get-Content -Path .\powerplat\settings.json | ConvertFrom-Json
 # Authenticate to source environment
 pac auth create --environment $settings.targetEnvURL
-# Export solution files, save to project, increment version in source environment
-# create path variable from settings
-$path = $settings.solutionDir + $settings.solutionName + "-" + $settings.solutionVersion + "managed.zip"
-# deploy solution to target environment
+# create path variable from settings -- this will deploy the UNMANAGED version of the solution, intended to be
+# deployed into a development environment for adjustment and customization to your specific needs. 
+$path = $settings.solutionDir + $settings.solutionName + "-" + $settings.solutionVersion + ".zip"
+# to re-use this script to deploy the MANAGED version of the solution to upper environments after adjusting for your 
+# specific needs, uncomment and use the below path instead of the above (commenting in out the above path variable definition)
+# $path = $settings.solutionDir + $settings.solutionName + "-" + $settings.solutionVersion + "managed.zip"
 pac solution import --path $path
 # use the below instead of the above to set connections while deploying. commenting out for now as this was causing an enexpected error in my target environment for some reason
 # $deploymentSettingsPath = $settings.solutionDir + $settings.deploymentSettings
