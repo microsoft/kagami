@@ -4,8 +4,17 @@ This directory contains a Power Platform Solution with Power Automate and Datave
 
 ## Contents
 
-- `deploy-solution.ps1`: This PowerShell script connects to a Power Platform environment and deploys the specified solution to that environment.
-- `settings.json`: This file contains the configuration settings for the deployment script. You need to create this file based on the `settings_sample_json` file and update it with the correct values for your environment.
+- `DocArchiveRequest-xxxx.zip`: Power Platform Solution, including:
+    - Data model to support example integration of JSON extracted data into Dataverse
+    - Primary integration flow example
+        - `Process JSON DeocInfo into DV` cloud flow: triggered by a new blob created, parses JSON blob into a record in the `Archive Request` table, and a record into the `Extracted Entity` table for each key/value pair related to the created `Archive Request`
+    - Secondary integration flow example
+        - `Process JSON into DV key-value records` cloud flow: triggered by a new blob created, parses JSON blob into a record in the `Archive Request` table and calls the child flows to record extracted details
+        - `CHILD - Process Protocol Doc` cloud flow: called to map extracted details into the `Protocol Doc` table, related to the created `Archive Request`
+        - `CHILD - Process Report Doc` cloud flow: called to map extracted details into the `Report Doc` table, related to the created `Archive Request`
+- `export-solution.ps1`: PowerShell script used to export solution files from the environment defined in a `settings.json` file
+- `deploy-solution.ps1`: PowerShell script that deploys the specified solution to the environment defined in a `settings.json` file
+- `settings.json`: This file contains the configuration settings for the deployment scripts. You need to create this file based on the `settings_sample_json` file and update it with the correct values for your environment.
 
 ## How to Use
 
