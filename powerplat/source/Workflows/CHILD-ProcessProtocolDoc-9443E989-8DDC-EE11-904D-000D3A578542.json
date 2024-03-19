@@ -1,0 +1,210 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "mscw_sharedcommondataserviceforapps_b96c2"
+        },
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "8387051d-c89f-44ea-b0f3-3c3aad345ae1"
+          },
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text_2": {
+                  "title": "JSON",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Please enter your input",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text": {
+                  "title": "RequestId",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Please enter your input",
+                  "x-ms-content-hint": "TEXT"
+                }
+              },
+              "required": [
+                "text_2",
+                "text"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Parse_JSON": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "d41a7cd7-74ef-4349-9a67-34bdd2785f5f"
+          },
+          "type": "ParseJson",
+          "inputs": {
+            "content": "@triggerBody()['text_2']",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "DocID": {
+                  "type": "string"
+                },
+                "DocType": {
+                  "type": "string"
+                },
+                "DocSubType": {
+                  "type": "string"
+                },
+                "StudyType": {
+                  "type": "string"
+                },
+                "StudySubType": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "Lookup_Doc_SubType": {
+          "runAfter": {
+            "Parse_JSON": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "d546a343-4b6f-4408-8308-af9de7ed58ec"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "mscw_docsubtypes",
+              "$filter": "mscw_name eq '@{body('Parse_JSON')?['DocSubType']}'",
+              "$top": 1
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Doc_SubType_ID": {
+          "runAfter": {
+            "Lookup_Doc_SubType": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "7acbe99c-4104-4a00-912f-6993566c3c5d"
+          },
+          "type": "Compose",
+          "inputs": "@First(outputs('Lookup_Doc_SubType')?['body/value'])['mscw_docsubtypeid']"
+        },
+        "Add_Protocol_Doc_Record": {
+          "runAfter": {
+            "Study_Type_ID": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "8207d521-e210-418e-a055-8d3f8754baca"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "CreateRecord",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "mscw_protocoldocs",
+              "item/mscw_name": "@body('Parse_JSON')?['DocID']",
+              "item/mscw_DocSubTypeId@odata.bind": "mscw_docsubtypes\\@{outputs('Doc_SubType_ID')}",
+              "item/mscw_OriginationRequestId@odata.bind": "mscw_archiverequests\\@{triggerBody()['text']}",
+              "item/mscw_StudyTypeId@odata.bind": "mscw_studytypes\\@{outputs('Study_Type_ID')}"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Response": {
+          "runAfter": {
+            "Add_Protocol_Doc_Record": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "41fa5957-7a5d-4746-85f9-fbf44b1c22fb"
+          },
+          "type": "Response",
+          "kind": "Http",
+          "inputs": {
+            "statusCode": 200
+          }
+        },
+        "Lookup_Study_Type": {
+          "runAfter": {
+            "Doc_SubType_ID": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "06fa91fc-4bdf-4237-8d3f-da2739764e6a"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "mscw_studytypes",
+              "$filter": "mscw_name eq '@{body('Parse_JSON')?['StudyType']}'",
+              "$top": 1
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Study_Type_ID": {
+          "runAfter": {
+            "Lookup_Study_Type": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "bb5d7871-841e-4f6b-b0bb-5e57f7299f8e"
+          },
+          "type": "Compose",
+          "inputs": "@First(outputs('Lookup_Study_Type')?['body/value'])['mscw_studytypeid']"
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

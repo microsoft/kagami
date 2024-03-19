@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{4fc79e6c-26aa-43b2-b5e0-98aa80d7158d}</savedqueryid>
+    <layoutxml>
+      <grid name="mscw_docsubtypes" jump="mscw_name" select="1" icon="1" preview="1">
+        <row name="mscw_docsubtype" id="mscw_docsubtypeid">
+          <cell name="mscw_name" width="300" />
+          <cell name="createdon" width="125" />
+          <cell name="mscw_doctypeid" width="100" />
+          <cell name="mscw_docsubtypeid" width="117" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>2</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="mscw_docsubtype">
+          <attribute name="mscw_docsubtypeid" />
+          <attribute name="mscw_name" />
+          <attribute name="createdon" />
+          <order attribute="mscw_name" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+          <attribute name="mscw_doctypeid" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Doc SubType Associated View" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

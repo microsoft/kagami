@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>0</isdefault>
+    <savedqueryid>{6b096e2f-a7b4-49d0-ade3-cbf233ecce25}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="mscw_name" select="1" icon="1" preview="1">
+        <row name="result" id="mscw_archiverequestid">
+          <cell name="mscw_name" width="300" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="mscw_archiverequest">
+          <attribute name="mscw_archiverequestid" />
+          <attribute name="mscw_name" />
+          <attribute name="createdon" />
+          <order attribute="mscw_name" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="1" />
+          </filter>
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Inactive Archive Requests" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

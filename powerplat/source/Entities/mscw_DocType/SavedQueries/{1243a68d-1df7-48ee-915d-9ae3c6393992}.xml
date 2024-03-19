@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{1243a68d-1df7-48ee-915d-9ae3c6393992}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="mscw_name" select="1" icon="1" preview="1">
+        <row name="result" id="mscw_doctypeid">
+          <cell name="mscw_name" width="300" />
+          <cell name="createdon" width="125" />
+          <cell name="modifiedby" width="112" />
+          <cell name="modifiedon" width="113" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>1</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="mscw_doctype">
+          <attribute name="mscw_doctypeid" />
+          <attribute name="mscw_name" />
+          <attribute name="createdon" />
+          <order attribute="mscw_name" descending="false" />
+          <attribute name="modifiedby" />
+          <attribute name="modifiedon" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Doc Type Advanced Find View" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>
