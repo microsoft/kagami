@@ -1,16 +1,63 @@
-# Project
+# Study Document Ingestion, Metadata Extraction, eArchive Request Automation
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+This project provides an example solution to illustrate the use of Azure AI Document Intelligence and Azure OpenAI to extract pertinent details and classifications from study documents for eArchive purposes. The intent is to replace a manual form which a user must fill out about a document when requesting the document to be eArchived in downstream systems, with an automated process triggered by the upload of said document. 
 
-As the maintainer of this project, please make a few updates:
+## Architecture
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+This solution includes a Durable Azure Function with Azure Blob Storage bindings for both trigger and output, the use of Azure AI Document Intelligence for initial document processing, and Azure OpenAI for more complex entity and classification extraction from section chunks. The result is a flattened JSON document of key/value pairs that is parsed and sent to Dataverse to record the eArchive request with details that would have been captured in a form from the user.
 
-## Contributing
+![Solution Architecture](./docs/DocIngestion_Architecture.png)
+
+## AI Orchestration using Function App and Semantic Kernel
+
+This solution includes a blob triggered durable function deployed to an Azure Function App, developed on Python with Semantic Kernel SDK to define and orchestrate prompt function calls to Azure OpenAI, as well as other libraries to perform calls to Azure AI Document Intelligence services.
+
+1. Document uploaded to blob storage, triggers Azure Durable Function
+<br><br>
+Python function uses Langchain and AI Services Document Intelligence to:
+2. Convert document to markdown
+3. Split into chunks by heading
+4. Detect Language
+5. Identify presence of handwritten text (signature)
+<br><br>
+Python function uses Semantic Kernel to orchestrate semantic (prompt) functions to Azure OpenAI chat completion service to:
+6. Classify document type from document chunks
+7. Extract entities and metadata of interest from document chunks
+<br><br>
+Python function uses Typing and List libraries to:
+8. Synthesizes mode of entities extracted from chunks to return most likely correct value for various entities/metadata and forms into flattened JSON
+<br><br>
+9. Resulting JSON file is stored in blob storage for downstream processing
+
+![Function App Logic Flow](./docs/DocIngestion_AppLogicFlow.png)
+
+Reference Documentation:
+
+* [Semantic Kernel GitHub Repo](https://github.com/microsoft/semantic-kernel/tree/main)
+* [Getting Started with Semantic Kernel (Python)](https://github.com/microsoft/semantic-kernel/blob/main/python/README.md)
+* [Understanding the Kernel in Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/agents/kernel/?tabs=python)
+* [Adding AI Services to the Kernel](https://learn.microsoft.com/en-us/semantic-kernel/agents/kernel/adding-services?tabs=python)
+
+## Power Platform Components
+See [Power Platform Section](./powerplat/readme.md) for details
+
+# Deployment Instructions
+
+1. Create an Azure Function App in your Azure Subscription
+2. Set up Azure Blob Storage, with the following two containers:
+    * incoming
+    * outputs
+3. Configure the Azure Function App with necessary application settings, such as connection strings for Azure Blob Storage. See local.settings.example.json for required settings
+4. Deploy the function code to the Azure Function App
+5. Follow instructions in [Power Platform section](/powerplat/readme.md) to deploy Power Platform portion of the solution
+
+**Reference Documentation:**
+
+* [Manage your function app](https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings?tabs=portal)
+* [App Configuration references](https://learn.microsoft.com/en-us/azure/app-service/app-service-configuration-references?toc=%2Fazure%2Fazure-functions%2Ftoc.json)
+* [Develop Azure Functions by using Visual Studio Code](https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-vs-code?tabs=node-v4%2Cpython-v2%2Cisolated-process&pivots=programming-language-python)
+
+# Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
