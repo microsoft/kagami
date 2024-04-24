@@ -20,12 +20,12 @@ Python function uses Langchain and AI Services Document Intelligence to:
 4. Detect Language
 5. Identify presence of handwritten text (signature)
 <br><br>
-Python function uses Semantic Kernel to orchestrate semantic (prompt) functions to Azure OpenAI chat completion service to:
-6. Classify document type from document chunks
-7. Extract entities and metadata of interest from document chunks
+6. Python function uses Semantic Kernel to orchestrate semantic (prompt) functions to Azure OpenAI chat completion service to:
+    * Classify document type from document chunks
+    * Extract entities and metadata of interest from document chunks
 <br><br>
-Python function uses Typing and List libraries to:
-8. Synthesizes mode of entities extracted from chunks to return most likely correct value for various entities/metadata and forms into flattened JSON
+7. Python function uses Typing and List libraries to
+synthesize mode of entities extracted from chunks to return most likely correct value for various entities/metadata and forms into flattened JSON
 <br><br>
 9. Resulting JSON file is stored in blob storage for downstream processing
 
