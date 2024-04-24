@@ -44,9 +44,7 @@ See [Power Platform Section](./powerplat/readme.md) for details
 # Deployment Instructions
 
 1. Create an Azure Function App in your Azure Subscription
-2. Set up Azure Blob Storage, with the following two containers:
-    * incoming
-    * outputs
+2. Create a Storage Account in your Azure Subscription
 3. Configure the Azure Function App with necessary application settings, such as connection strings for Azure Blob Storage. See local.settings.example.json for required settings
 4. Deploy the function code to the Azure Function App
 5. Follow instructions in [Power Platform section](/powerplat/readme.md) to deploy Power Platform portion of the solution
