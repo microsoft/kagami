@@ -11,6 +11,6 @@ langchain
 langchain-community
 langdetect
 python-dotenv
-semantic-kernel==0.9.4b1
+semantic-kernel==1.39.4
 azure.storage.blob
 tiktoken
