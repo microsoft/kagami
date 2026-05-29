@@ -1,7 +1,8 @@
 {
+  // Only Microsoft-published extensions are auto-recommended to reduce supply chain risk.
+  // See 'Optional Power Platform Setup' section in README.md for PAC CLI configuration.
   "recommendations": [
     "ms-azuretools.vscode-azurefunctions",
-    "ms-python.python",
-    "pac-cli.pac-vscode-extension"
+    "ms-python.python"
   ]
 }
