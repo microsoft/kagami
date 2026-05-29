@@ -49,6 +49,16 @@ See [Power Platform Section](./powerplat/readme.md) for details
 4. Deploy the function code to the Azure Function App
 5. Follow instructions in [Power Platform section](/powerplat/readme.md) to deploy Power Platform portion of the solution
 
+## Optional: Power Platform Development Setup
+
+If you are working on Power Platform components and need the **Power Apps CLI (PAC)** integration in VS Code:
+
+1. Install the [Power Apps CLI](https://learn.microsoft.com/en-us/power-platform/developer/cli/introduction) globally on your machine
+2. In VS Code, open the Extensions marketplace (Ctrl+Shift+X)
+3. Search for "Power Apps CLI" and install the `pac-cli.pac-vscode-extension`
+
+Note: The PAC CLI extension is not auto-recommended on repo clone to minimize auto-loaded dependencies. It remains available for optional manual install when needed for Power Platform development.
+
 **Reference Documentation:**
 
 * [Manage your function app](https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings?tabs=portal)
